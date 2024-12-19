@@ -92,7 +92,7 @@ class UserOverviewAnalysis:
             plt.xticks(rotation=45, ha='right')
             plt.tight_layout()
             plt.show()
-    def plot_univariate_unalysis(self, df):
+    def plot_univariate_Analysis(self, df):
         # Univariate analysis: Total Duration Distribution
         plt.figure(figsize=(10, 6))
         sns.histplot(df['Total Duration'], bins=30, kde=True)
