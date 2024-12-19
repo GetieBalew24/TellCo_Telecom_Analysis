@@ -59,3 +59,36 @@ class UserOverviewAnalysis:
         plt.ylabel('Number of Users')
         plt.xticks(rotation=45, ha='right')
         plt.show()
+    def top_5_handsets_per_manufacturer(self, df):
+        # Call top_3_handset_manufacturers to get 'top_3_manufacturers' without displaying it
+        top_3_manufacturers = self.top_3_handset_manufacturers(df)
+        
+        # Filter dataset for top 3 manufacturers
+        top_3_manufacturers_list = top_3_manufacturers.index.tolist()
+        filtered_df = df[df['Handset Manufacturer'].isin(top_3_manufacturers_list)]
+
+        # Identify top 5 handsets per manufacturer
+        top_5_handsets_per_manufacturer = {}
+        for manufacturer in top_3_manufacturers_list:
+            manufacturer_data = filtered_df[filtered_df['Handset Manufacturer'] == manufacturer]
+            top_5_handsets = manufacturer_data['Handset Type'].value_counts().head(5)
+            top_5_handsets_per_manufacturer[manufacturer] = top_5_handsets
+
+        # Print the top 5 handsets per manufacturer
+        print("\nTop 5 Handsets per Top 3 Manufacturer:")
+        # for manufacturer, handsets in top_5_handsets_per_manufacturer.items():
+
+        return top_5_handsets_per_manufacturer
+    
+    def plot_top_5_handsets_per_manufacturer(self, df):
+        top_5_handsets_per_manufacturer=self.top_5_handsets_per_manufacturer(df)
+        # Plot the top 5 handsets per manufacturer
+        for manufacturer, handsets in top_5_handsets_per_manufacturer.items():
+            plt.figure(figsize=(10, 6))
+            handsets.plot(kind='bar', edgecolor='black')
+            plt.title(f'Top 5 Handsets for {manufacturer}')
+            plt.xlabel('Handset Type')
+            plt.ylabel('Number of Users')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.show()
