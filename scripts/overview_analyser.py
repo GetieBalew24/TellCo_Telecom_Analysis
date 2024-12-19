@@ -104,3 +104,12 @@ class UserOverviewAnalysis:
         sns.scatterplot(x='Social Media DL (Bytes)', y='Total Data', data=df)
         plt.title('Social Media DL vs Total Data')
         plt.show()
+    def corr_analysis(self, df):
+        # corrilation analysis for selected columns
+        app_data = df[['Social Media DL (Bytes)', 'Google DL (Bytes)', 'Email DL (Bytes)', 
+               'Youtube DL (Bytes)', 'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 'Other DL (Bytes)']]
+        correlation_matrix = app_data.corr()
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(correlation_matrix, annot=True)
+        plt.title('Correlation Matrix')
+        plt.show()
