@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-
+#
 class UserOverviewAnalysis:
     def __init__(self,df):
         self.df=df
@@ -112,4 +112,28 @@ class UserOverviewAnalysis:
         plt.figure(figsize=(10, 8))
         sns.heatmap(correlation_matrix, annot=True)
         plt.title('Correlation Matrix')
+        plt.show()
+    def plot_PCA(self, df):
+        
+        # Dimensionality Reduction
+        features = ['Social Media DL (Bytes)', 'Google DL (Bytes)', 'Email DL (Bytes)',
+                    'Youtube DL (Bytes)', 'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 'Other DL (Bytes)']
+
+        x = df.loc[:, features].values
+        x = StandardScaler().fit_transform(x)
+
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(x)
+        principalDf = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
+
+        # Explained variance
+        explained_variance = pca.explained_variance_ratio_
+        print("Explained Variance by Principal Components:", explained_variance)
+        
+        # Plotting PCA
+        plt.figure(figsize=(8, 6))
+        plt.scatter(principalDf['PC1'], principalDf['PC2'])
+        plt.xlabel('Principal Component 1')
+        plt.ylabel('Principal Component 2')
+        plt.title('PCA of Application Data')
         plt.show()
