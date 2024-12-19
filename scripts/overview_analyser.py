@@ -98,3 +98,9 @@ class UserOverviewAnalysis:
         sns.histplot(df['Total Duration'], bins=30, kde=True)
         plt.title('Total Duration Distribution')
         plt.show()
+    def plot_bivariate_analysis(self, df):
+        # Bivariate analysis: Social Media DL vs Total Data
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(x='Social Media DL (Bytes)', y='Total Data', data=df)
+        plt.title('Social Media DL vs Total Data')
+        plt.show()
