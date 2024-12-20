@@ -43,7 +43,8 @@ The dataset includes information on:
     + pandas: A powerful library for data manipulation and analysis for structured data in tabular form (like CSV or SQL tables).
     + numpy:A fundamental library for numerical computing in Python. 
     + seaborn:A data visualization library built on top of Matplotlib, designed for creating visually appealing and informative statistical graphics.
-    + matplotlib:The base library for creating static, interactive, and animated visualizations in Python..
+    + matplotlib:The base library for creating static, interactive, and animated visualizations in Python.
+    + scikit-learn is a powerful library in Python for machine learning, providing tools for data preprocessing, dimensionality reduction, clustering... 
 
    - Database Connectivity & Management Libraries:
     + psycopg2:A PostgreSQL database adapter for Python, used for executing SQL commands and managing transactions with PostgreSQL databases.
