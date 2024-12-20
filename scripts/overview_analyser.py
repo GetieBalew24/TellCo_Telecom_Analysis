@@ -92,6 +92,33 @@ class UserOverviewAnalysis:
             plt.xticks(rotation=45, ha='right')
             plt.tight_layout()
             plt.show()
+    def calculate_total_duration(self, df):
+        """
+        Add a column 'Total Duration' to the DataFrame.
+        """
+        df['Total Duration'] = df['Total DL (Bytes)'] + df['Total UL (Bytes)']
+        return df
+
+    def calculate_total_data(self, df):
+        """
+        Add a column 'Total Data' to the DataFrame.
+        """
+        df['Total Data'] = df['Total DL (Bytes)'] + df['Total UL (Bytes)']
+        return df
+
+    def segment_users_into_deciles(self, df):
+        """
+        Segment users into 5 decile classes based on 'Total Duration'.
+        """
+        df['Decile'] = pd.qcut(df['Total Duration'], 5, labels=False)
+        return df
+
+    def compute_total_data_per_decile(self, df):
+        """
+        Compute total data per decile class and return a DataFrame.
+        """
+        total_data_per_decile = df.groupby('Decile')['Total Data'].sum().to_frame()
+        return total_data_per_decile
     def plot_univariate_Analysis(self, df):
         # Univariate analysis: Total Duration Distribution
         plt.figure(figsize=(10, 6))
