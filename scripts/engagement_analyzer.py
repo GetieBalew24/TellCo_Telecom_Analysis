@@ -160,3 +160,121 @@ class EngagementAnalyzer:
         """
         column_name = f'{application} Total (Bytes)'
         return app_engagement.nlargest(n, column_name)
+
+
+    def prepare_user_engagement_data(self,df):
+        """
+        Prepare user engagement data by aggregating and calculating necessary metrics.
+        
+        Args:
+            df (pd.DataFrame): The input DataFrame containing telecom data.
+            
+        Returns:
+            pd.DataFrame: A DataFrame with aggregated user engagement metrics.
+            pd.DataFrame: Top 10 users by session frequency.
+            pd.DataFrame: Top 10 users by total duration.
+            pd.DataFrame: Top 10 users by total traffic.
+        """
+        # Calculate total data volume per session
+        df['Total Duration'] = df['Total UL (Bytes)'] + df['Total DL (Bytes)']
+        
+        # Aggregate data by MSISDN/Number
+        user_engagement_df = df.groupby('MSISDN/Number').agg({
+            'Bearer Id': 'count',  # Number of sessions per user
+            'Total Duration': 'sum',  # Total data volume of all sessions
+            'Total UL (Bytes)': 'sum',  # Total upload bytes
+            'Total DL (Bytes)': 'sum'  # Total download bytes
+        }).reset_index()
+        
+        # Calculate the total traffic per user
+        user_engagement_df['Total Traffic (Bytes)'] = user_engagement_df['Total UL (Bytes)'] + user_engagement_df['Total DL (Bytes)']
+        
+        # Rename columns for better understanding
+        user_engagement_df.rename(columns={'Bearer Id': 'Session Frequency'}, inplace=True)
+        
+        # Find the top 10 customers per engagement metric
+        top10_sessions = user_engagement_df.nlargest(10, 'Session Frequency')
+        top10_duration = user_engagement_df.nlargest(10, 'Total Duration')
+        top10_traffic = user_engagement_df.nlargest(10, 'Total Traffic (Bytes)')
+        
+        return user_engagement_df, top10_sessions, top10_duration, top10_traffic
+    
+    def apply_clustering(self, user_engagement_df, n_clusters=3):
+        """
+        Apply K-Means clustering to the user engagement data.
+        
+        Args:
+            user_engagement_df (pd.DataFrame): The DataFrame containing user engagement metrics.
+            n_clusters (int): The number of clusters for K-Means. Default is 3.
+            
+        Returns:
+            pd.DataFrame: The DataFrame with an added 'Engagement Cluster' column.
+        """
+        # Selecting only the relevant columns for normalization
+        metrics = ['Session Frequency', 'Total Duration', 'Total Traffic (Bytes)']
+        
+        # Normalize the selected metrics for clustering
+        scaler = MinMaxScaler()
+        user_engagement_df[metrics] = scaler.fit_transform(user_engagement_df[metrics])
+        
+        # Apply K-Means clustering
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        user_engagement_df['Engagement Cluster'] = kmeans.fit_predict(user_engagement_df[metrics])
+        
+        return user_engagement_df
+    def plot_top_applications(self, df, applications, top_n=3):
+        """
+        Summarize the total traffic for each application and plot the top N most used applications.
+        
+        Args:
+            df (pd.DataFrame): The input DataFrame containing traffic data for applications.
+            applications (list): A list of column names representing different applications in the DataFrame.
+            top_n (int): The number of top applications to plot. Default is 3.
+        
+        Returns:
+            pd.Series: A Series containing the total traffic for each application.
+        """
+        # Sum up total traffic for each application
+        app_usage = df[applications].sum().sort_values(ascending=False)
+        
+        # Plot the top N applications
+        top_apps = app_usage.head(top_n)
+        plt.figure(figsize=(12, 6))
+        top_apps.plot(kind='bar', title=f'Top {top_n} Most Used Applications')
+        plt.ylabel('Total Traffic (Bytes)')
+        plt.xlabel('Application')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        
+        return app_usage
+    
+    def plot_elbow_curve(self, df, metrics, max_k=10):
+        """
+        Determine the optimal number of clusters using the Elbow Method and plot the elbow curve.
+        
+        Args:
+            df (pd.DataFrame): The input DataFrame containing the data to cluster.
+            metrics (list): A list of column names to use for clustering.
+            max_k (int): The maximum number of clusters to test. Default is 10.
+        
+        Returns:
+            list: A list of distortions (inertia) for each number of clusters.
+        """
+        distortions = []
+        
+        # Iterate over the range of cluster numbers
+        for k in range(1, max_k + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(df[metrics])
+            distortions.append(kmeans.inertia_)
+        
+        # Plot the elbow curve
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(1, max_k + 1), distortions, marker='o')
+        plt.title('Elbow Method for Optimal K')
+        plt.xlabel('Number of Clusters (K)')
+        plt.ylabel('Distortion (Inertia)')
+        plt.grid(True)
+        plt.show()
+        
+        return distortions
