@@ -32,3 +32,18 @@ class EngagementAnalyzer:
 
         # Display the final DataFrame with user engagement metrics
         return user_engagement
+    
+    def high_engagement_users(self,df):
+        user_engagement=self.user_engagement(df)
+        # Define high engagement threshold (e.g., top 10% of each metric)
+        freq_threshold = user_engagement['Session Frequency'].quantile(0.9)
+        duration_threshold = user_engagement['Total Session Duration (ms)'].quantile(0.9)
+        traffic_threshold = user_engagement[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1).quantile(0.9)
+
+        # Filter high engagement users
+        high_engagement_users = user_engagement[
+            (user_engagement['Session Frequency'] >= freq_threshold) &
+            (user_engagement['Total Session Duration (ms)'] >= duration_threshold) &
+            ((user_engagement[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)) >= traffic_threshold)
+        ]
+        return high_engagement_users
