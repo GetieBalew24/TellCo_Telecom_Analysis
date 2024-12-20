@@ -111,3 +111,52 @@ class EngagementAnalyzer:
         top_10_users_duration = high_engagement_users.nlargest(10, 'Total Session Duration (ms)')
         top_10_users_traffic = high_engagement_users.nlargest(10, 'Total Traffic (Bytes)')
         return top_10_users_freq, top_10_users_duration, top_10_users_traffic
+    def aggregate_traffic_per_user(self, df, applications):
+        """
+        Aggregates the traffic per user for the specified applications.
+
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing the traffic data.
+        applications (list of str): List of application columns to aggregate.
+
+        Returns:
+        pd.DataFrame: A DataFrame with aggregated traffic per user.
+        """
+        return df.groupby('MSISDN/Number')[applications].sum().reset_index()
+
+    def calculate_total_traffic(self, app_engagement, applications):
+        """
+        Calculates the total traffic for each application (DL + UL) and adds it to the DataFrame.
+
+        Parameters:
+        app_engagement (pd.DataFrame): DataFrame with aggregated traffic per user.
+        applications (list of str): List of application columns to calculate total traffic for.
+
+        Returns:
+        pd.DataFrame: Updated DataFrame with total traffic columns added.
+        """
+        for app in applications:
+            total_col_name = app.replace(' (Bytes)', ' Total (Bytes)')
+            app_engagement[total_col_name] = app_engagement[app]
+        
+        # Calculate total traffic for Social Media as an example
+        app_engagement['Social Media Total (Bytes)'] = (
+            app_engagement['Social Media DL Total (Bytes)'] + 
+            app_engagement['Social Media UL Total (Bytes)']
+        )
+        
+        return app_engagement
+    def get_top_users(self, app_engagement, application, n=10):
+        """
+        Retrieves the top N users based on total traffic for a given application.
+
+        Parameters:
+        app_engagement (pd.DataFrame): DataFrame with total traffic per user.
+        application (str): Application name for which to retrieve top users.
+        n (int): Number of top users to retrieve (default is 10).
+
+        Returns:
+        pd.DataFrame: A DataFrame containing the top N users for the specified application.
+        """
+        column_name = f'{application} Total (Bytes)'
+        return app_engagement.nlargest(n, column_name)
