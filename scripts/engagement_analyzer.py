@@ -47,3 +47,45 @@ class EngagementAnalyzer:
             ((user_engagement[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)) >= traffic_threshold)
         ]
         return high_engagement_users
+    
+    def plot_user_engagement(self,df):
+        user_engagement=self.user_engagement(df)
+        # Define high engagement threshold (e.g., top 10% of each metric)
+        freq_threshold = user_engagement['Session Frequency'].quantile(0.9)
+        duration_threshold = user_engagement['Total Session Duration (ms)'].quantile(0.9)
+        traffic_threshold = user_engagement[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1).quantile(0.9)
+
+        # Filter high engagement users
+        high_engagement_users = user_engagement[
+            (user_engagement['Session Frequency'] >= freq_threshold) &
+            (user_engagement['Total Session Duration (ms)'] >= duration_threshold) &
+            ((user_engagement[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)) >= traffic_threshold)
+        ]
+
+        # Plot High Engagement Users
+
+        # Set up the figure and axes
+        fig, axs = plt.subplots(3, 1, figsize=(12, 18))
+
+        # Plot High Engagement Users by Session Frequency
+        sns.histplot(high_engagement_users['Session Frequency'], bins=50, kde=True, ax=axs[0], color='blue')
+        axs[0].set_title('High Engagement Users - Session Frequency')
+        axs[0].set_xlabel('Session Frequency')
+        axs[0].set_ylabel('Number of High Engagement Users')
+
+        # Plot High Engagement Users by Session Duration
+        sns.histplot(high_engagement_users['Total Session Duration (ms)'], bins=50, kde=True, ax=axs[1], color='green')
+        axs[1].set_title('High Engagement Users - Total Session Duration')
+        axs[1].set_xlabel('Total Session Duration (ms)')
+        axs[1].set_ylabel('Number of High Engagement Users')
+
+        # Plot High Engagement Users by Total Traffic
+        high_engagement_users['Total Traffic (Bytes)'] = high_engagement_users[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)
+        sns.histplot(high_engagement_users['Total Traffic (Bytes)'], bins=50, kde=True, ax=axs[2], color='red')
+        axs[2].set_title('High Engagement Users - Total Traffic')
+        axs[2].set_xlabel('Total Traffic (Bytes)')
+        axs[2].set_ylabel('Number of High Engagement Users')
+
+        # Adjust layout.
+        plt.tight_layout()
+        plt.show()
