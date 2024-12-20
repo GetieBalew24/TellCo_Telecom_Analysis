@@ -89,3 +89,25 @@ class EngagementAnalyzer:
         # Adjust layout.
         plt.tight_layout()
         plt.show()
+    def top_10_users_per_metric(self, df):
+        # Calculate the top 10 users based on the specified metric
+        high_engagement_users=self.high_engagement_users(df)
+        # Calculate Total Traffic using sum of UL and DL Bytes
+        high_engagement_users['Total Traffic (Bytes)'] = high_engagement_users[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)
+        top_10_users_freq = high_engagement_users.nlargest(10, 'Session Frequency')
+        top_10_users_duration = high_engagement_users.nlargest(10, 'Total Session Duration (ms)')
+        top_10_users_traffic = high_engagement_users.nlargest(10, 'Total Traffic (Bytes)')
+        print("Top 10 Users by Session Frequency:\n", top_10_users_freq, "\n")
+        print("Top 10 Users by Total Session Duration:\n", top_10_users_duration, "\n")
+        print("Top 10 Users by Total Traffic:\n", top_10_users_traffic, "\n")
+    
+    
+    def top_10_users(self,df):
+        # Calculate the top 10 users based on the specified metric
+        high_engagement_users=self.high_engagement_users(df)
+        # Calculate Total Traffic using sum of UL and DL Bytes
+        high_engagement_users['Total Traffic (Bytes)'] = high_engagement_users[['Total UL (Bytes)', 'Total DL (Bytes)']].sum(axis=1)
+        top_10_users_freq = high_engagement_users.nlargest(10, 'Session Frequency')
+        top_10_users_duration = high_engagement_users.nlargest(10, 'Total Session Duration (ms)')
+        top_10_users_traffic = high_engagement_users.nlargest(10, 'Total Traffic (Bytes)')
+        return top_10_users_freq, top_10_users_duration, top_10_users_traffic
