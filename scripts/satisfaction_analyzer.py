@@ -207,3 +207,5 @@ class SatisfactionAnalyzer:
         plt.xlabel('Customer ID')
         plt.xticks(rotation=45)
         plt.show()
+    
+    
