@@ -100,3 +100,53 @@ class ExperienceAnalyzer:
         result_df = pd.concat([top_values, bottom_values, most_freq_values], axis=1)
         
         return result_df
+    def plot_top_10_throughput_distribution(self, df, column_name='Avg Bearer TP DL (kbps)', top_n=10):
+        """
+        Plot the distribution of the top N average throughput per handset type.
+        
+        Args:
+        df (DataFrame): The input DataFrame containing the data.
+        column_name (str): The column name representing average throughput. Default is 'Avg Bearer TP DL (kbps)'.
+        top_n (int): The number of top handset types to include in the plot. Default is 10.
+        
+        Returns:
+        None: Displays a boxplot showing the distribution of throughput values for the top N handset types.
+        """
+        # Sort the DataFrame to get the top N handset types based on average throughput
+        top_throughput_df = df.sort_values(by=column_name, ascending=False).head(top_n)
+        
+        # Plot the distribution of average throughput using a boxplot
+        plt.figure(figsize=(12, 6))
+        sns.boxplot(x='Handset Type', y=column_name, data=top_throughput_df)
+        plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
+        plt.title(f'Distribution of {column_name} per Handset Type')  # Add a title to the plot
+        plt.xlabel('Handset Type')  # Label for x-axis
+        plt.ylabel(column_name)  # Label for y-axis
+        plt.show()  # Display the plot
+
+    def plot_top_10_tcp_retransmission(self, df, column_name='TCP DL Retrans. Vol (Bytes)', top_n=10):
+        """
+        Plot the average TCP retransmission volume for the top N handset types.
+        
+        Args:
+        df (DataFrame): The input DataFrame containing the data.
+        column_name (str): The column name representing TCP retransmission volume. Default is 'TCP DL Retrans. Vol (Bytes)'.
+        top_n (int): The number of top handset types to include in the plot. Default is 10.
+        
+        Returns:
+        None: Displays a bar plot showing the average TCP retransmission volume for the top N handset types.
+        """
+        # Group by 'Handset Type' and compute the average TCP retransmission volume
+        avg_tcp_retrans_per_handset = df.groupby('Handset Type')[column_name].mean().reset_index()
+        
+        # Sort the grouped data to get the top N handset types
+        top_tcp_retrans_df = avg_tcp_retrans_per_handset.sort_values(by=column_name, ascending=False).head(top_n)
+        
+        # Plot the average TCP retransmission volume using a barplot
+        plt.figure(figsize=(12, 6))
+        sns.barplot(x='Handset Type', y=column_name, data=top_tcp_retrans_df)
+        plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
+        plt.title(f'Average {column_name} per Handset Type')  # Add a title to the plot
+        plt.xlabel('Handset Type')  # Label for x-axis
+        plt.ylabel(f'Average {column_name}')  # Label for y-axis
+        plt.show()  # Display the plot
