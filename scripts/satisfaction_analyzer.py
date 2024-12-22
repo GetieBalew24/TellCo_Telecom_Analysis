@@ -117,11 +117,30 @@ class SatisfactionAnalyzer:
 
     # Function to calculate Euclidean distance
     def euclidean_distance(self, x, y):
+        """
+        Calculate the Euclidean distance between two vectors.
+
+        Args:
+        x (array-like): First vector.
+        y (array-like): Second vector.
+
+        Returns:
+        float: The Euclidean distance between x and y. """
         return np.sqrt(np.sum((x - y) ** 2))
 
     # Task 4.1: Assign engagement and experience scores
     def calculate_scores(self, engagement_df, experience_df):
-        
+        """
+        Calculate engagement and experience scores based on the Euclidean distance 
+        from each data point to its respective cluster center.
+
+        Args:
+        engagement_df (DataFrame): DataFrame containing engagement data and cluster assignments.
+        experience_df (DataFrame): DataFrame containing experience data and cluster assignments.
+
+        Returns:
+        tuple: Updated engagement and experience DataFrames with scores added.
+        """
         # Remove 'MSISDN/Number' and 'Customer Number' it is not used in calculations
         engagement_columns = [col for col in engagement_df.columns if col != 'MSISDN/Number']
         experience_columns = [col for col in experience_df.columns if col != 'Customer Number']
@@ -152,3 +171,39 @@ class SatisfactionAnalyzer:
         experience_df['Experience Score'] = experience_scores
         
         return engagement_df, experience_df
+       # Task 4.2: Calculate satisfaction score
+    def calculate_satisfaction(self, engagement_df, experience_df):
+        """
+        Calculate a satisfaction score by averaging engagement and experience scores.
+
+        Args:
+        engagement_df (DataFrame): DataFrame containing engagement data and scores.
+        experience_df (DataFrame): DataFrame containing experience data and scores.
+
+        Returns:
+        tuple: A merged DataFrame with satisfaction scores and a DataFrame of the top 10 satisfied customers.
+        """
+        experience_df.rename(columns={'Customer Number': 'MSISDN/Number'}, inplace=True)
+        # Merge engagement and experience data
+        merged_df = engagement_df.merge(experience_df, on='MSISDN/Number', suffixes=('_engagement', '_experience'))
+        
+        # Calculate satisfaction score
+        merged_df['Satisfaction Score'] = (merged_df['Engagement Score'] + merged_df['Experience Score']) / 2
+        
+        # Get top 10 satisfied customers
+        top_10_satisfied = merged_df.nlargest(10, 'Satisfaction Score')
+        return merged_df, top_10_satisfied
+    def plot_top_10_satisfied(self, top_10_satisfied):
+        """
+        Visualize the top 10 most satisfied customers using a bar plot.
+
+        Args:
+        top_10_satisfied (DataFrame): DataFrame containing the top 10 satisfied customers.
+        """
+        plt.figure(figsize=(10, 6))
+        sns.barplot( x='MSISDN/Number',y='Satisfaction Score', data=top_10_satisfied)
+        plt.title('Top 10 Most Satisfied Customers')
+        plt.ylabel('Satisfaction Score')
+        plt.xlabel('Customer ID')
+        plt.xticks(rotation=45)
+        plt.show()
