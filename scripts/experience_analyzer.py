@@ -36,3 +36,24 @@ class ExperienceAnalyzer:
                 self.df[col].fillna("", inplace=True)
 
         return self.df
+    def aggregate_customer_data(self, df):
+        """
+        Aggregates the required information per customer (MSISDN/Number).
+        
+        Args:
+        df (DataFrame): The input DataFrame containing the data.
+        
+        Returns:
+        DataFrame: Aggregated DataFrame with mean values for numerical columns and the first entry for categorical columns.
+        """
+        aggregated_df = df.groupby('MSISDN/Number').agg({
+            'TCP DL Retrans. Vol (Bytes)': 'mean',
+            'TCP UL Retrans. Vol (Bytes)': 'mean',
+            'Avg RTT DL (ms)': 'mean',
+            'Avg RTT UL (ms)': 'mean',
+            'Avg Bearer TP DL (kbps)': 'mean',
+            'Avg Bearer TP UL (kbps)': 'mean',
+            'Handset Type': 'first'  # Taking the first handset type per customer
+        }).reset_index()
+
+        return aggregated_df
