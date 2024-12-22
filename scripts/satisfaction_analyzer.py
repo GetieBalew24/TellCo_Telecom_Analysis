@@ -238,3 +238,71 @@ class SatisfactionAnalyzer:
         print("Regression model intercept:", intercept)
         
         return model, coefficients, intercept
+    
+    def perform_kmeans_clustering(self, merged_df, n_clusters=2, random_state=42):
+        """
+        Perform K-means clustering on the engagement and experience scores.
+
+        Parameters:
+        - merged_df (pd.DataFrame): DataFrame containing 'Engagement Score' and 'Experience Score'.
+        - n_clusters (int): Number of clusters for K-means. Default is 2.
+        - random_state (int): Random state for reproducibility. Default is 42.
+
+        Returns:
+        - merged_df (pd.DataFrame): DataFrame with an additional 'Cluster' column indicating cluster assignments.
+        - kmeans (KMeans): Trained KMeans model.
+        """
+        # Extract features for clustering
+        X_cluster = merged_df[['Engagement Score', 'Experience Score']]
+        
+        # Standardize the features
+        scaler = StandardScaler()
+        X_cluster_scaled = scaler.fit_transform(X_cluster)
+        
+        # Perform K-means clustering
+        kmeans = KMeans(n_clusters=n_clusters, random_state=random_state)
+        merged_df['Cluster'] = kmeans.fit_predict(X_cluster_scaled)
+        
+        return merged_df, kmeans
+    def aggregate_scores_per_cluster(self, merged_df):
+        """
+        Aggregate the average satisfaction and experience scores per cluster.
+
+        Parameters:
+        - merged_df (pd.DataFrame): DataFrame containing 'Cluster', 'Satisfaction Score', and 'Experience Score'.
+
+        Returns:
+        - cluster_aggregation (pd.DataFrame): DataFrame with mean satisfaction and experience scores per cluster.
+        """
+        # Aggregate the average satisfaction and experience score per cluster
+        cluster_aggregation = merged_df.groupby('Cluster').agg({
+            'Satisfaction Score': 'mean',
+            'Experience Score': 'mean'
+        })
+
+        return cluster_aggregation
+    
+    def export_to_postgresql(self, merged_df, table_name, db_config):
+        """
+        Exports the final table containing user ID, engagement, experience, and satisfaction scores to MySQL database.
+
+        Parameters:
+        - merged_df (pd.DataFrame): DataFrame containing the final table data.
+        - table_name (str): Name of the table in the MySQL database.
+        - db_config (dict): Dictionary containing database configuration details like user, password, host, database.
+
+        Returns:
+        - None
+        """
+        # Create a connection to the MySQL database
+        try:
+            # Define the SQLAlchemy engine for PostgreSQL
+            engine = create_engine(
+                f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}/{db_config['database']}"
+            )
+            # Export the DataFrame to the PostgreSQL table
+            merged_df.to_sql(name=table_name, con=engine, if_exists='replace', index=False)
+            print(f"Data exported successfully to the table '{table_name}' in the PostgreSQL database.")
+
+        except Exception as e:
+            print("Error occurred while exporting data to PostgreSQL:", e)
