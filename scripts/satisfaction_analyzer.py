@@ -208,4 +208,33 @@ class SatisfactionAnalyzer:
         plt.xticks(rotation=45)
         plt.show()
     
-    
+    def build_regression_model(self, merged_df):
+        """
+        Build a linear regression model to predict the satisfaction score.
+
+        Parameters:
+        - merged_df (pd.DataFrame): DataFrame containing 'Engagement Score', 'Experience Score', and 'Satisfaction Score'.
+
+        Returns:
+        - model (LinearRegression): Trained Linear Regression model.
+        - coefficients (array): Coefficients of the regression model.
+        - intercept (float): Intercept of the regression model.
+        """
+        # Define features (X) and target (y)
+        X = merged_df[['Engagement Score', 'Experience Score']]
+        y = merged_df['Satisfaction Score']
+        
+        # Initialize the Linear Regression model
+        model = LinearRegression()
+        
+        # Fit the model to the data
+        model.fit(X, y)
+        
+        # Print regression model coefficients and intercept
+        coefficients = model.coef_
+        intercept = model.intercept_
+        
+        print("Regression model coefficients:", coefficients)
+        print("Regression model intercept:", intercept)
+        
+        return model, coefficients, intercept
