@@ -27,7 +27,7 @@ class SatisfactionAnalyzer:
         """
         self.df = df
 
-    def user_engagement(self):
+    def user_engagement(self,df):
         """
         Analyze user engagement by calculating session frequency, total duration,
         and total traffic. Normalize the metrics and apply K-Means clustering to 
@@ -37,34 +37,29 @@ class SatisfactionAnalyzer:
             DataFrame: A DataFrame containing user engagement metrics and their 
             assigned engagement clusters.
         """
-        # Calculate total duration for each session
-        self.df['Total Duration'] = self.df['Total UL (Bytes)'] + self.df['Total DL (Bytes)']
-
-        # Aggregate metrics at the user level
-        engagement_df = self.df.groupby('MSISDN/Number').agg({
-            'Bearer Id': 'count',  # Number of sessions per user
+        df['Total Duration']=df['Total UL (Bytes)']+df['Total DL (Bytes)']
+        # Assume df is the DataFrame containing the dataset
+        engagement_df = df.groupby('MSISDN/Number').agg({
+            'Bearer Id': 'count',  # This will give us the number of sessions per user
             'Total Duration': 'sum',  # Total duration of all sessions
-            'Total UL (Bytes)': 'sum',  # Total uploaded bytes
-            'Total DL (Bytes)': 'sum'  # Total downloaded bytes
+            'Total UL (Bytes)': 'sum',  # Total upload bytes
+            'Total DL (Bytes)': 'sum',  # Total download bytes
         }).reset_index()
 
-        # Calculate total traffic per user
+        # Calculate the total traffic per user
         engagement_df['Total Traffic (Bytes)'] = engagement_df['Total UL (Bytes)'] + engagement_df['Total DL (Bytes)']
 
-        # Rename columns for better clarity
+        # Rename columns for better understanding
         engagement_df.rename(columns={'Bearer Id': 'Session Frequency'}, inplace=True)
-
-        # Select relevant columns for normalization
+        
+        # Selecting only the relevant columns for normalization
         metrics = ['Session Frequency', 'Total Duration', 'Total Traffic (Bytes)']
-
-        # Normalize the metrics
         scaler = MinMaxScaler()
         engagement_df[metrics] = scaler.fit_transform(engagement_df[metrics])
 
-        # Apply K-Means clustering with k=3
+        # Applying K-Means clustering with k=3
         kmeans = KMeans(n_clusters=3, random_state=42)
         engagement_df['Engagement Cluster'] = kmeans.fit_predict(engagement_df[metrics])
-
         return engagement_df
 
     def get_least_engaged_cluster(self, df, cluster_column, metrics, verbose=False):
@@ -80,81 +75,80 @@ class SatisfactionAnalyzer:
         Returns:
             int: The cluster number with the least engagement.
         """
-        # Step 1: Calculate the centroids (mean metric values) for each cluster
+        # Calculate the centroids of each engagement cluster
         engagement_centroids = df.groupby(cluster_column)[metrics].mean()
 
-        if verbose:
-            print("\nEngagement Centroids for Each Cluster:")
-            print(engagement_centroids)
+        # Display the centroids for each cluster
+        print(engagement_centroids)
 
-        # Step 2: Calculate the Total Engagement Score for each cluster
+        # Sum the normalized metrics for each cluster to get a measure of total engagement
         engagement_centroids['Total Engagement Score'] = engagement_centroids.sum(axis=1)
 
-        if verbose:
-            print("\nTotal Engagement Scores:")
-            print(engagement_centroids['Total Engagement Score'])
-
-        # Step 3: Identify the cluster with the lowest total engagement score
+        # Identify the cluster with the lowest total engagement score
         least_engaged_cluster = engagement_centroids['Total Engagement Score'].idxmin()
 
-        if verbose:
-            print(f"\nThe least engaged cluster is: {least_engaged_cluster}")
+        print(f"The least engaged cluster is: {least_engaged_cluster}")
 
         return least_engaged_cluster
-
-    def calculate_engagement_scores(self, engagement_df, least_engaged_cluster, metrics):
+    def get_worst_experience_cluster(self, df, cluster_column, metrics):
         """
-        Calculate the engagement score for each user as the Euclidean distance 
-        from the user’s data point to the centroid of the least engaged cluster.
-
-        Args:
-            engagement_df (DataFrame): The DataFrame containing user engagement data.
-            least_engaged_cluster (int): The cluster with the least engagement.
-            metrics (list): List of metrics used for clustering.
-
+        Determine the cluster with the worst experience based on specified metrics.
+        
+        Parameters:
+        df (DataFrame): The input DataFrame containing the clustered data.
+        cluster_column (str): The column name representing the cluster labels.
+        metrics (list): List of metrics to consider for determining worst experience.
+        
         Returns:
-            DataFrame: Engagement scores for each user based on their distance to 
-            the least engaged cluster's centroid.
+        int: The cluster number with the worst experience.
         """
-        # Step 1: Get the centroid of the least engaged cluster
-        least_engaged_centroid = engagement_df[engagement_df['Engagement Cluster'] == least_engaged_cluster][metrics].mean()
+        # Compute the mean values for each cluster
+        cluster_means = df.groupby(cluster_column)[metrics].mean()
 
-        # Step 2: Calculate the Euclidean distance from each user to the least engaged cluster centroid
-        engagement_df['Engagement Score'] = pairwise_distances(engagement_df[metrics], [least_engaged_centroid], metric='euclidean')
+        # Determine the worst experience cluster
+        # Define worst experience based on highest average values for the metrics
+        # Example: Highest average RTT, TCP retransmission, etc.
+        cluster_means['Average'] = cluster_means.mean(axis=1).idxmax()
+        # Determine the worst experience cluster based on the highest average
+        worst_experience_cluster = cluster_means['Average'].idxmax()
 
-        return engagement_df
-    def user_experience(self):
-        """
-        Analyze user experience by clustering users based on their experience metrics
-        (e.g., retransmissions, RTT, throughput) and calculate the experience score
-        using Euclidean distance from the worst experience cluster.
+        print("Worst Experience Cluster:", worst_experience_cluster)
+        return worst_experience_cluster
 
-        Returns:
-            DataFrame: A DataFrame containing user experience metrics and their 
-            assigned experience clusters and experience scores.
-        """
-        # Define the relevant metrics for user experience
-        metrics = [
-            'Avg TCP DL Retransmission', 'Avg TCP UL Retransmission', 'Avg RTT DL', 
-            'Avg RTT UL', 'Avg Throughput DL', 'Avg Throughput UL'
-        ]
+    # Function to calculate Euclidean distance
+    def euclidean_distance(self, x, y):
+        return np.sqrt(np.sum((x - y) ** 2))
 
-        # Normalize the metrics
-        scaler = MinMaxScaler()
-        df_normalized = self.df[metrics]
-        df_normalized = pd.DataFrame(scaler.fit_transform(df_normalized), columns=metrics)
-
-        # Apply K-Means clustering with k=2 (good vs bad experience)
-        kmeans = KMeans(n_clusters=2, random_state=42)
-        self.df['Experience Cluster'] = kmeans.fit_predict(df_normalized)
-
-        # Identify the worst experience cluster (the cluster with the highest average metric values)
-        cluster_centroids = kmeans.cluster_centers_
-        worst_cluster_index = np.argmax(cluster_centroids.sum(axis=1))  # Cluster with the highest sum of centroid values
-        worst_cluster_centroid = cluster_centroids[worst_cluster_index]
-
-        # Calculate the Euclidean distance for each user from the worst experience cluster
-        self.df['Experience Score'] = pairwise_distances(df_normalized, [worst_cluster_centroid], metric='euclidean')
-
-        # Return the relevant columns
-        return self.df[['Customer Number', 'Experience Cluster', 'Experience Score']]
+    # Task 4.1: Assign engagement and experience scores
+    def calculate_scores(self, engagement_df, experience_df):
+        
+        # Remove 'MSISDN/Number' and 'Customer Number' it is not used in calculations
+        engagement_columns = [col for col in engagement_df.columns if col != 'MSISDN/Number']
+        experience_columns = [col for col in experience_df.columns if col != 'Customer Number']
+        
+        # Calculate the center of each engagement cluster
+        engagement_centers = engagement_df.groupby('Engagement Cluster')[engagement_columns].mean()
+        
+        # Calculate engagement scores
+        engagement_scores = []
+        for _, row in engagement_df.iterrows():
+            cluster_center = engagement_centers.loc[row['Engagement Cluster']]
+            score = self.euclidean_distance(row[engagement_columns], cluster_center)
+            engagement_scores.append(score)
+        
+        engagement_df['Engagement Score'] = engagement_scores
+        
+        # Calculate the center of each experience cluster
+        numeric_cols = experience_df.select_dtypes(include=[np.number]).columns
+        experience_centers = experience_df[numeric_cols].groupby('Experience Cluster').mean().drop(columns=['MSISDN/Number'], errors='ignore')
+        
+        # Calculate experience scores
+        experience_scores = []
+        for _, row in experience_df.iterrows():
+            cluster_center = experience_centers.loc[row['Experience Cluster']]
+            score = self.euclidean_distance(row[experience_columns], cluster_center)
+            experience_scores.append(score)
+        
+        experience_df['Experience Score'] = experience_scores
+        
+        return engagement_df, experience_df
