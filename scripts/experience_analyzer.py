@@ -57,3 +57,46 @@ class ExperienceAnalyzer:
         }).reset_index()
 
         return aggregated_df
+    def get_top_bottom_most_freq_values(self, df, column_name, top_n=10):
+        """
+        Retrieve the top N, bottom N, and most frequent N values for a specified column.
+
+        This function analyzes a given column in the DataFrame to extract:
+        - Top N values (highest values).
+        - Bottom N values (lowest values).
+        - Most frequent N values and their frequencies.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing the data.
+            column_name (str): The name of the column to analyze.
+            top_n (int): The number of top, bottom, and most frequent values to retrieve. Default is 10.
+
+        Returns:
+            pd.DataFrame: A consolidated DataFrame containing:
+                - Top N values with their indices.
+                - Bottom N values with their indices.
+                - Most frequent N values and their frequencies.
+        """
+        # Extract the top N values (highest values in the column)
+        top_values = df[column_name].nlargest(top_n).reset_index(name=f'Top {column_name}')
+        
+        # Extract the bottom N values (lowest values in the column)
+        bottom_values = df[column_name].nsmallest(top_n).reset_index(name=f'Bottom {column_name}')
+        
+        # Extract the most frequent N values in the column along with their counts
+        most_freq_values = (
+            df[column_name]
+            .value_counts()
+            .nlargest(top_n)
+            .reset_index(name=f'Most Frequent {column_name}')
+        )
+        
+        # Rename columns for clarity
+        top_values.columns = ['Index', f'Top {column_name}']
+        bottom_values.columns = ['Index', f'Bottom {column_name}']
+        most_freq_values.columns = [f'Most Frequent {column_name}', 'Frequency']
+
+        # Merge all results into a single DataFrame
+        result_df = pd.concat([top_values, bottom_values, most_freq_values], axis=1)
+        
+        return result_df
