@@ -150,3 +150,51 @@ class ExperienceAnalyzer:
         plt.xlabel('Handset Type')  # Label for x-axis
         plt.ylabel(f'Average {column_name}')  # Label for y-axis
         plt.show()  # Display the plot
+    def perform_clustering(self, df, features_columns, n_clusters=3):
+        """
+        Perform clustering on the DataFrame using K-Means and describe each cluster.
+
+        Args:
+        df (DataFrame): The input DataFrame containing the data.
+        features_columns (list): List of column names to be used for clustering.
+        n_clusters (int): The number of clusters for K-Means. Default is 3.
+
+        Returns:
+        DataFrame: A DataFrame describing each cluster with mean values for numeric columns.
+        """
+        # Selecting relevant columns for clustering
+        features = df[features_columns]
+
+        # Normalizing the data
+        scaler = MinMaxScaler()
+        features_scaled = scaler.fit_transform(features)
+
+        # Applying K-Means clustering
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        df['Experience Cluster'] = kmeans.fit_predict(features_scaled)
+
+        # Select only numeric columns for the cluster description
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
+
+        # Describing each cluster
+        cluster_description = df.groupby('Experience Cluster')[numeric_columns].mean()
+
+        return cluster_description
+    
+    def plot_2d_clusters(self, df, feature1, feature2, cluster_column='Experience Cluster'):
+        """
+        Plot a 2D scatter plot of clusters.
+
+        Args:
+        df (DataFrame): The input DataFrame containing the data with cluster assignments.
+        feature1 (str): The name of the first feature to plot.
+        feature2 (str): The name of the second feature to plot.
+        cluster_column (str): The column name for cluster assignments. Default is 'Experience Cluster'.
+        """
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(x=df[feature1], y=df[feature2], hue=df[cluster_column], palette='viridis', s=100, alpha=0.7)
+        plt.title('2D Scatter Plot of Clusters')
+        plt.xlabel(feature1)
+        plt.ylabel(feature2)
+        plt.legend(title='Cluster')
+        plt.show()
