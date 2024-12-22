@@ -66,6 +66,7 @@ class SatisfactionAnalyzer:
         engagement_df['Engagement Cluster'] = kmeans.fit_predict(engagement_df[metrics])
 
         return engagement_df
+
     def get_least_engaged_cluster(self, df, cluster_column, metrics, verbose=False):
         """
         Determine the cluster with the least engagement based on specified metrics.
@@ -101,3 +102,59 @@ class SatisfactionAnalyzer:
 
         return least_engaged_cluster
 
+    def calculate_engagement_scores(self, engagement_df, least_engaged_cluster, metrics):
+        """
+        Calculate the engagement score for each user as the Euclidean distance 
+        from the user’s data point to the centroid of the least engaged cluster.
+
+        Args:
+            engagement_df (DataFrame): The DataFrame containing user engagement data.
+            least_engaged_cluster (int): The cluster with the least engagement.
+            metrics (list): List of metrics used for clustering.
+
+        Returns:
+            DataFrame: Engagement scores for each user based on their distance to 
+            the least engaged cluster's centroid.
+        """
+        # Step 1: Get the centroid of the least engaged cluster
+        least_engaged_centroid = engagement_df[engagement_df['Engagement Cluster'] == least_engaged_cluster][metrics].mean()
+
+        # Step 2: Calculate the Euclidean distance from each user to the least engaged cluster centroid
+        engagement_df['Engagement Score'] = pairwise_distances(engagement_df[metrics], [least_engaged_centroid], metric='euclidean')
+
+        return engagement_df
+    def user_experience(self):
+        """
+        Analyze user experience by clustering users based on their experience metrics
+        (e.g., retransmissions, RTT, throughput) and calculate the experience score
+        using Euclidean distance from the worst experience cluster.
+
+        Returns:
+            DataFrame: A DataFrame containing user experience metrics and their 
+            assigned experience clusters and experience scores.
+        """
+        # Define the relevant metrics for user experience
+        metrics = [
+            'Avg TCP DL Retransmission', 'Avg TCP UL Retransmission', 'Avg RTT DL', 
+            'Avg RTT UL', 'Avg Throughput DL', 'Avg Throughput UL'
+        ]
+
+        # Normalize the metrics
+        scaler = MinMaxScaler()
+        df_normalized = self.df[metrics]
+        df_normalized = pd.DataFrame(scaler.fit_transform(df_normalized), columns=metrics)
+
+        # Apply K-Means clustering with k=2 (good vs bad experience)
+        kmeans = KMeans(n_clusters=2, random_state=42)
+        self.df['Experience Cluster'] = kmeans.fit_predict(df_normalized)
+
+        # Identify the worst experience cluster (the cluster with the highest average metric values)
+        cluster_centroids = kmeans.cluster_centers_
+        worst_cluster_index = np.argmax(cluster_centroids.sum(axis=1))  # Cluster with the highest sum of centroid values
+        worst_cluster_centroid = cluster_centroids[worst_cluster_index]
+
+        # Calculate the Euclidean distance for each user from the worst experience cluster
+        self.df['Experience Score'] = pairwise_distances(df_normalized, [worst_cluster_centroid], metric='euclidean')
+
+        # Return the relevant columns
+        return self.df[['Customer Number', 'Experience Cluster', 'Experience Score']]
