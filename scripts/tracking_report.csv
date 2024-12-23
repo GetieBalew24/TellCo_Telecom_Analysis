@@ -1,0 +1,2 @@
+run_id,start_time,end_time,params,metrics,artifacts
+a157314c87f040c6b8bfb9b3dcdef0da,1734959588069,1734959591592,"{'max_depth': '5', 'n_estimators': '100'}","{'accuracy': 1.0, 'training_time': 0.1771533489227295}",file:///home/gech/10Acadamy/week-2/TellCo_Telecom_Analysis/scripts/mlruns/0/a157314c87f040c6b8bfb9b3dcdef0da/artifacts
