@@ -8,10 +8,36 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
 
 class EngagementAnalyzer:
+    """
+    A class to analyze user engagement metrics based on session data.
+    
+    Attributes:
+        df (pd.DataFrame): The input DataFrame containing session data.
+    """
     def __init__(self, df):
+        """
+        Initialize the EngagementAnalyzer class with a DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing the dataset.
+        """
         self.df = df
 
     def user_engagement(self,df):
+        """
+        Calculate user engagement metrics for the given DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing session data. 
+                            Expected columns: 'MSISDN/Number', 'Dur. (ms)', 
+                            'Total UL (Bytes)', 'Total DL (Bytes)'.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing user engagement metrics:
+                        - Session Frequency
+                        - Total Session Duration (ms)
+                        - Total Upload and Download Traffic
+        """
        # Calculate session frequency for each user
         session_frequency = df.groupby('MSISDN/Number').size().reset_index(name='Session Frequency')
 
@@ -34,6 +60,15 @@ class EngagementAnalyzer:
         return user_engagement
     
     def high_engagement_users(self,df):
+        """
+        Identify high engagement users based on the top 10% threshold for engagement metrics.
+        
+        Args:
+            df (pd.DataFrame): The input DataFrame containing session data.
+
+        Returns:
+            pd.DataFrame: A subset of the DataFrame containing high engagement users.
+        """
         user_engagement=self.user_engagement(df)
         # Define high engagement threshold (e.g., top 10% of each metric)
         freq_threshold = user_engagement['Session Frequency'].quantile(0.9)
@@ -49,6 +84,15 @@ class EngagementAnalyzer:
         return high_engagement_users
     
     def plot_user_engagement(self,df):
+        """
+        Visualize the distribution of engagement metrics for high engagement users.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing session data.
+
+        Returns:
+            None: Displays plots for session frequency, session duration, and total traffic for high engagement users.
+        """
         user_engagement=self.user_engagement(df)
         # Define high engagement threshold (e.g., top 10% of each metric)
         freq_threshold = user_engagement['Session Frequency'].quantile(0.9)
@@ -90,6 +134,15 @@ class EngagementAnalyzer:
         plt.tight_layout()
         plt.show()
     def top_10_users_per_metric(self, df):
+        """
+        Display the top 10 users for each engagement metric (session frequency, session duration, total traffic).
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing session data.
+
+        Returns:
+            None: Prints the top 10 users for each engagement metric.
+        """
         # Calculate the top 10 users based on the specified metric
         high_engagement_users=self.high_engagement_users(df)
         # Calculate Total Traffic using sum of UL and DL Bytes
@@ -103,6 +156,15 @@ class EngagementAnalyzer:
     
     
     def top_10_users(self,df):
+        """
+        Display the top 10 users for each engagement metric (session frequency, session duration, total traffic).
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing session data.
+
+        Returns:
+            None: Prints the top 10 users for each engagement metric.
+        """
         # Calculate the top 10 users based on the specified metric
         high_engagement_users=self.high_engagement_users(df)
         # Calculate Total Traffic using sum of UL and DL Bytes
