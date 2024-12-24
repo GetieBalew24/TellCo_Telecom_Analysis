@@ -6,7 +6,19 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
 
 class ExperienceAnalyzer:
+    """
+    A class to analyze user experience metrics based on session data.
+
+    Attributes:
+        df (pd.DataFrame): The input DataFrame containing session data.
+    """
     def __init__(self, df):
+        """
+        Initialize the ExperienceAnalyzer class with a DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing data.
+        """
         self.df = df
 
     def fill_missing_values(self):

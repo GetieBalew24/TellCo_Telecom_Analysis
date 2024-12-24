@@ -4,11 +4,32 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-#
 class UserOverviewAnalysis:
+    """
+    A class for performing analysis and visualization on user data, 
+    including handset types, manufacturers, usage statistics, and more.
+
+    Attributes:
+        df (pd.DataFrame): The input DataFrame containing user data.
+    """
     def __init__(self,df):
+        """
+        Initialize the UserOverviewAnalysis class with a DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing user data.
+        """
         self.df=df
     def top_10_handsets(self,df):
+        """
+        Retrieve the top 10 most used handsets.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing handset information.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the top 10 handsets and their counts.
+        """
         # Count occurrences of each handset (Handset Type)
         handset_counts = df['Handset Type'].value_counts()
         
@@ -18,6 +39,12 @@ class UserOverviewAnalysis:
         return top_10_handsets.to_frame().reset_index()
     
     def plot_top_10_handsets(self, df):
+        """
+        Plot a bar chart of the top 10 most used handsets.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing handset information.
+        """
         handset_counts = df['Handset Type'].value_counts()
         top_10_handsets = handset_counts.head(10)
 
@@ -48,6 +75,12 @@ class UserOverviewAnalysis:
         # Print the top 3 handset manufacturers
         return top_3_handset_manufacturers
     def plot_top_3_handset_manufacturers(self,df):
+        """
+        Plot a bar chart of the top 3 handset manufacturers.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing handset manufacturer information.
+        """
         handset_manufacturer_counts=df['Handset Manufacturer'].value_counts()
         # Get top 3 handset manufacturers
         top_3_handset_manufacturers = handset_manufacturer_counts.head(3)
@@ -60,6 +93,16 @@ class UserOverviewAnalysis:
         plt.xticks(rotation=45, ha='right')
         plt.show()
     def top_5_handsets_per_manufacturer(self, df):
+        """
+        Retrieve the top 5 handsets for each of the top 3 manufacturers.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing handset information.
+
+        Returns:
+            dict: A dictionary where keys are manufacturer names and values are Series 
+                  of the top 5 handsets for each manufacturer.
+        """
         # Call top_3_handset_manufacturers to get 'top_3_manufacturers' without displaying it
         top_3_manufacturers = self.top_3_handset_manufacturers(df)
         
@@ -81,6 +124,12 @@ class UserOverviewAnalysis:
         return top_5_handsets_per_manufacturer
     
     def plot_top_5_handsets_per_manufacturer(self, df):
+        """
+        Plot bar charts of the top 5 handsets for each of the top 3 manufacturers.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing handset information.
+        """
         top_5_handsets_per_manufacturer=self.top_5_handsets_per_manufacturer(df)
         # Plot the top 5 handsets per manufacturer
         for manufacturer, handsets in top_5_handsets_per_manufacturer.items():
@@ -120,18 +169,40 @@ class UserOverviewAnalysis:
         total_data_per_decile = df.groupby('Decile')['Total Data'].sum().to_frame()
         return total_data_per_decile
     def plot_univariate_Analysis(self, df):
+        """
+        Calculate and add a 'Total Duration' column to the DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing download and upload duration columns.
+
+        Returns:
+            pd.DataFrame: The updated DataFrame with the 'Total Duration' column added.
+        """
         # Univariate analysis: Total Duration Distribution
         plt.figure(figsize=(10, 6))
         sns.histplot(df['Total Duration'], bins=30, kde=True)
         plt.title('Total Duration Distribution')
         plt.show()
     def plot_bivariate_analysis(self, df):
+        """
+        Plot a scatter plot of 'Social Media DL (Bytes)' vs 'Total Data'.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing 'Social Media DL (Bytes)' 
+                               and 'Total Data' columns.
+        """
         # Bivariate analysis: Social Media DL vs Total Data
         plt.figure(figsize=(10, 6))
         sns.scatterplot(x='Social Media DL (Bytes)', y='Total Data', data=df)
         plt.title('Social Media DL vs Total Data')
         plt.show()
     def corr_analysis(self, df):
+        """
+        Perform correlation analysis on application data and plot a heatmap.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing application data columns.
+        """
         # corrilation analysis for selected columns
         app_data = df[['Social Media DL (Bytes)', 'Google DL (Bytes)', 'Email DL (Bytes)', 
                'Youtube DL (Bytes)', 'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 'Other DL (Bytes)']]
@@ -141,7 +212,12 @@ class UserOverviewAnalysis:
         plt.title('Correlation Matrix')
         plt.show()
     def plot_PCA(self, df):
-        
+        """
+        Perform PCA on application data and plot the principal components.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame containing application data columns.
+        """
         # Dimensionality Reduction
         features = ['Social Media DL (Bytes)', 'Google DL (Bytes)', 'Email DL (Bytes)',
                     'Youtube DL (Bytes)', 'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 'Other DL (Bytes)']
